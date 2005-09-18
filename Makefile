@@ -2,9 +2,11 @@ OCAMLMAKEFILE = ../../OCamlMakefile
 
 SOURCES := scheduler.ml
 THREADS := yes
- RESULT := scheduler
+OCAMLFLAGS = -cclib '-g'
+OCAMLLDFLAGS = -cclib -g -verbose
+RESULT := scheduler
 
-all: native-code-library
+all: ncl
 
 include $(OCAMLMAKEFILE)
 

@@ -6,7 +6,7 @@
 type id = unit ref
 
 type event = 
-   | Register of (unit -> unit) * float * float * id
+   | Register of (unit -> unit) * float * (unit -> float) * id
    | Unregister of id
 
 type t = {
@@ -27,12 +27,17 @@ let msgQ =
       }
 
 let wrap_mutex f =
-   Mutex.lock msgQ.mutex;
-   try let v = f () in
-      Mutex.unlock msgQ.mutex;
-      v
-   with
-      | exc -> Mutex.unlock msgQ.mutex; raise exc
+   try
+      Mutex.lock msgQ.mutex;
+      try let v = f () in
+	 Mutex.unlock msgQ.mutex;
+	 v
+      with
+	 | exc -> Mutex.unlock msgQ.mutex; raise exc
+   with exn ->
+      Printf.eprintf "Scheduler exc: %s\n" (Printexc.to_string exn);
+      flush stdout;
+      raise exn
 
 let add_task f start interval =
    wrap_mutex 
@@ -40,11 +45,11 @@ let add_task f start interval =
 	  let id = ref () in
 	     Queue.add (Register (f, start, interval, id)) msgQ.queue;
 	     if msgQ.input_wrote = false then 
-		begin
-		   msgQ.input_wrote <- true;
-		   let _ = Unix.write msgQ.writer " " 0 1 in ()
-		end
-	     else ();
+		   begin
+		      msgQ.input_wrote <- true;
+		      let _ = Unix.write msgQ.writer " " 0 1 in ()
+		   end
+		else ();
 	     id
       )
 
@@ -62,7 +67,7 @@ let remove_task id =
 type callback = {
    f: unit -> unit;
    time: float;
-   interval: float;
+   interval: unit -> float;
    id: id
 }
 
@@ -92,10 +97,13 @@ let rec scheduler tasks =
 			 if x.time <= curr_time then 
 			    begin
 			       x.f ();
-			       if x.interval <> 0.0 then
-				  let new_x = {x with time = 
-					x.time +. x.interval} in
-				     scheduler (insert_task xs new_x)
+			       let xinterval = x.interval () in
+				  if xinterval <> 0.0 then
+				     let new_x = {x with time = 
+					   x.time +. xinterval} in
+					scheduler (insert_task xs new_x)
+				  else
+				     scheduler xs
 			    end
 			 else
 			    scheduler tasks
@@ -140,14 +148,16 @@ let _ =
 	 Printf.printf "[%d:%d] %s\n" tm.Unix.tm_min tm.Unix.tm_sec msg;
 	 flush Pervasives.stdout
    in
-      f "test" ();
-      let time = (Unix.gettimeofday ()) +. 2. in
-      let sch = Thread.create scheduler [] in
-      let _ = add_task (f "hello") time 10. in
-      let id = add_task (f "world") time 10. in
-	 Unix.sleep 50;
-	 remove_task id;
-	 Thread.join sch;
-	 print_endline "scheduler died"
-   
+      init ();
+      let count = ref 0 in
+	 for i=1 to 100000 do
+	    let time = (Unix.gettimeofday ()) +. 2. in
+	       incr count;
+	       if !count mod 10 = 0 then begin
+		  flush stdout;
+		  Unix.sleep 1
+	       end;
+	       ignore (add_task (f ("msg" ^ string_of_int !count)) time
+			  (fun() -> 0.));
+	 done
 *)
