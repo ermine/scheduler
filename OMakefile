@@ -1,0 +1,33 @@
+.PHONY: makelib testlib install clean
+
+OCAMLFLAGS = -thread
+
+FILES[] =
+   heapqueue
+   scheduler
+
+LIB = scheduler
+
+.DEFAULT: $(OCamlLibrary $(LIB), $(FILES))
+
+TEST_FILES = test
+TEST = test
+
+section
+   OCAML_LIBS = scheduler
+   OCAML_OTHER_LIBS = unix threads
+   OCamlProgram($(TEST), $(TEST_FILES))
+
+testlib: test
+
+open ../../config
+
+IFILES[] =
+
+LibInstall(makelib, $(LIB), $(IFILES))
+
+install: makelib
+
+clean:
+   $(CLEAN) $(TEST)$(EXE)
+  
