@@ -23,8 +23,11 @@ testlib: test
 open ../../config
 
 IFILES[] =
+   scheduler
 
-LibInstall(makelib, $(LIB), $(IFILES))
+ALIBS[] =
+
+LibInstall(makelib, $(LIB), $(IFILES), $(ALIBS))
 
 install: makelib
 
