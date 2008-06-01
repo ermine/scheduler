@@ -20,8 +20,6 @@ section
 
 testlib: test
 
-open ../../config
-
 IFILES[] =
    scheduler
 
