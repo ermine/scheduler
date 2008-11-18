@@ -6,7 +6,7 @@ open Heapqueue
 
 type elt = {
   mutable time: float;
-  interval: unit -> float;
+  repeat: unit -> float;
   callback: unit -> unit;
   mutable cancelled: bool
 }
@@ -43,19 +43,19 @@ let call timerQ =
 	    TimerQueue.remove timerQ.queue 0
     else (
 	    r.callback ();
-	    let interval = r.interval () in
-	      if interval = 0.0 then
+	    let repeat = r.repeat () in
+	      if repeat = 0.0 then
 	        TimerQueue.remove timerQ.queue 0
 	      else (
-	        r.time <- r.time +. interval;
+	        r.time <- repeat;
 	        TimerQueue.sift_down timerQ.queue 0
 	      )
     );
     Mutex.unlock timerQ.mutex
 
-let add_task timerQ callback time interval =
+let add_task timerQ callback time repeat =
   let data= { time = time;
-	interval = interval;
+	repeat = repeat;
 	callback = callback;
 	cancelled = false
 	} 

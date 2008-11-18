@@ -4,7 +4,7 @@
 
 type elt = {
   mutable time : float;
-  interval : unit -> float;
+  repeat : unit -> float;
   callback : unit -> unit;
   mutable cancelled : bool;
 }

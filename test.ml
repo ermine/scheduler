@@ -20,7 +20,7 @@ let _ =
 	        sleep 1
 	      end;
 	      let r = add_task timerQ (f time i) time
-	        (fun() -> Random.float 1800.) in
+	        (fun() -> time +. Random.float 1800.) in
 	      let _ = add_task timerQ (fun () -> 
 				  Printf.printf "%d cancelled\n" i;
 				  flush Pervasives.stdout;
