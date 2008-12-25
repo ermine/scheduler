@@ -1,163 +1,102 @@
-(*                                                                          *)
-(* (c) 22005 Anastasia Gornostaeva. <ermine@ermine.pp.ru>                   *)
-(*                                                                          *)
-(* Last modification: 10 Feb 2005                                           *)
+(*
+ * (c) 2005-2008 Anastasia Gornostaeva. <ermine@ermine.pp.ru>
+ *)
 
-type id = unit ref
+open Heapqueue
 
-type event = 
-   | Register of (unit -> unit) * float * (unit -> float) * id
-   | Unregister of id
+type elt = {
+  mutable time: float;
+  repeat: unit -> float;
+  callback: unit -> unit;
+  mutable cancelled: bool
+}
+
+module TimerOrdered =
+struct 
+  type t = elt
+  let compare elt1 elt2 = compare elt1.time elt2.time
+end
+
+module TimerQueue = HeapQueue(TimerOrdered)
 
 type t = {
-   reader: Unix.file_descr;
-   writer: Unix.file_descr;
-   queue: event Queue.t;
-   mutex: Mutex.t;
-   mutable input_wrote: bool
+  reader: Unix.file_descr;
+  writer: Unix.file_descr;
+  queue: elt TimerQueue.t;
+  mutex: Mutex.t;
+  mutable input_wrote: bool
 }
 
-let msgQ = 
-   let (f1, f2) = Unix.pipe () in
-      { reader = f1;
-	writer = f2;
-	queue = Queue.create ();
-	mutex = Mutex.create ();
-	input_wrote = false
-      }
+let create () =
+  let (f1, f2) = Unix.pipe () in
+    { reader = f1;
+    writer = f2;
+	  queue = TimerQueue.create ();
+	  mutex = Mutex.create ();
+	  input_wrote = false
+    }
 
-let wrap_mutex f =
-   try
-      Mutex.lock msgQ.mutex;
-      try let v = f () in
-	 Mutex.unlock msgQ.mutex;
-	 v
-      with
-	 | exc -> Mutex.unlock msgQ.mutex; raise exc
-   with exn ->
-      Printf.eprintf "Scheduler exc: %s\n" (Printexc.to_string exn);
-      flush stdout;
-      raise exn
+let call timerQ =
+  Mutex.lock timerQ.mutex;
+  let r = TimerQueue.peek timerQ.queue in
+    if r.cancelled then
+	    TimerQueue.remove timerQ.queue 0
+    else (
+	    r.callback ();
+	    let repeat = r.repeat () in
+	      if repeat = 0.0 then
+	        TimerQueue.remove timerQ.queue 0
+	      else (
+	        r.time <- repeat;
+	        TimerQueue.sift_down timerQ.queue 0
+	      )
+    );
+    Mutex.unlock timerQ.mutex
 
-let add_task f start interval =
-   wrap_mutex 
-      (fun() ->
-	  let id = ref () in
-	     Queue.add (Register (f, start, interval, id)) msgQ.queue;
-	     if msgQ.input_wrote = false then 
-		   begin
-		      msgQ.input_wrote <- true;
-		      let _ = Unix.write msgQ.writer " " 0 1 in ()
-		   end
-		else ();
-	     id
-      )
+let add_task timerQ callback time repeat =
+  let data= { time = time;
+	repeat = repeat;
+	callback = callback;
+	cancelled = false
+	} 
+  in
+    Mutex.lock timerQ.mutex;
+    TimerQueue.add timerQ.queue data;
+    if timerQ.input_wrote = false then (
+	    timerQ.input_wrote <- true;
+	    ignore (Unix.write timerQ.writer " " 0 1)
+    );
+    Mutex.unlock timerQ.mutex;
+    data
 
-let remove_task id =
-   wrap_mutex 
-      (fun() ->
-	  Queue.add (Unregister id) msgQ.queue;
-	  if msgQ.input_wrote = false then
-	     begin
-		msgQ.input_wrote <- true;
-		let _ = Unix.write msgQ.writer " " 0 1 in ()
-	     end
-	  else ())
-
-type callback = {
-   f: unit -> unit;
-   time: float;
-   interval: unit -> float;
-   id: id
-}
-
-let rec insert_task tasks task =
-   match tasks with
-      | [] -> [task]
-      | x :: xs ->
-	   if x.time <= task.time then
-	      x :: insert_task xs task
-	   else
-	      task :: tasks
-
-let rec scheduler tasks =
-   let sleep = match tasks with
-      | [] -> 10000000.
-      | x :: xs -> 
-	   let time = x.time -. Unix.gettimeofday () in
-	      if time < 0. then 0.0 else time
-   in
-   let r, _, _ = Thread.select [msgQ.reader] [] [] sleep in
-      match r with
-	 | [] ->
-	      begin match tasks with
-		 | [] -> scheduler tasks;
-		 | x :: xs ->
-		      let curr_time = Unix.gettimeofday () in
-			 if x.time <= curr_time then 
-			    begin
-			       x.f ();
-			       let xinterval = x.interval () in
-				  if xinterval <> 0.0 then
-				     let new_x = {x with time = 
-					   x.time +. xinterval} in
-					scheduler (insert_task xs new_x)
-				  else
-				     scheduler xs
-			    end
-			 else
-			    scheduler tasks
-	      end		 
-	 | x :: xs -> 
-	      let msg = wrap_mutex 
-		 (fun _ -> 
-		     let msg = Queue.take msgQ.queue in
-			if Queue.length msgQ.queue = 0 && 
-			   msgQ.input_wrote then begin
-			      let s = String.create 1 in
-			      let _ = Unix.read msgQ.reader s 0 1 in
-				 msgQ.input_wrote <- false
-			   end;
-			msg
-		 )
-	      in
-		 match msg with
-		    | Register (f, start, interval, id) ->
-			 let callback = 
-			    {f = f; 
-			     time = start; 
-			     interval = interval;
-			     id = id} in
-			    scheduler (insert_task tasks callback)
-		    | Unregister id ->
-			 let rec loop tail =
-			    match tail with
-			       | [] -> []
-			       | x :: xs ->
-				    if x.id == id then xs else x :: loop xs
-			 in
-			    scheduler (loop tasks)
-
-let init () =
-   Thread.create scheduler []
-
-(*
-let _ =
-   let f msg () =
-      let tm = Unix.localtime (Unix.time ()) in
-	 Printf.printf "[%d:%d] %s\n" tm.Unix.tm_min tm.Unix.tm_sec msg;
-	 flush Pervasives.stdout
-   in
-      init ();
-      let count = ref 0 in
-	 for i=1 to 100000 do
-	    let time = (Unix.gettimeofday ()) +. 2. in
-	       incr count;
-	       if !count mod 10 = 0 then begin
-		  flush stdout;
-		  Unix.sleep 1
-	       end;
-	       ignore (add_task (f ("msg" ^ string_of_int !count)) time
-			  (fun() -> 0.));
-	 done
-*)
+let run timerQ =
+  let rec scheduler () =
+    let sleep = 
+	    if TimerQueue.is_empty timerQ.queue then
+	      10000000.
+	    else
+	      let task = TimerQueue.peek timerQ.queue in
+	      let time = task.time -. Unix.gettimeofday () in
+	        if time < 0. then 0.0 else time
+    in
+    let r, _, _ = Thread.select [timerQ.reader] [] [] sleep in
+	    match r with
+	      | [] ->
+		        if not (TimerQueue.is_empty timerQ.queue) then (
+		          let curr_time = Unix.gettimeofday () in
+		          let task = TimerQueue.peek timerQ.queue in
+		            if task.time <= curr_time then
+			            call timerQ
+		        );
+		        scheduler ()
+	      | x :: xs -> 
+		        if timerQ.input_wrote then (
+		          Mutex.lock timerQ.mutex;
+		          let s = String.create 1 in
+		          let _ = Unix.read timerQ.reader s 0 1 in
+		            timerQ.input_wrote <- false;
+		            Mutex.unlock timerQ.mutex
+		        );
+		        scheduler ()
+  in
+    Thread.create scheduler ()
