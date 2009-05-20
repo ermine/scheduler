@@ -1,6 +1,0 @@
-description = "Simple scheduler library"
-requires = "unix,threads"
-version = "1"
-archive(byte) = "scheduler.cma"
-archive(native) = "scheduler.cmxa"
-
