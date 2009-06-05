@@ -1,5 +1,5 @@
 (*
- * (c) 2005-2008 Anastasia Gornostaeva. <ermine@ermine.pp.ru>
+ * (c) 2005-2009 Anastasia Gornostaeva. <ermine@ermine.pp.ru>
  *)
 
 open Heapqueue
@@ -89,7 +89,7 @@ let run timerQ =
 			            call timerQ
 		        );
 		        scheduler ()
-	      | x :: xs -> 
+	      | _x :: _xs -> 
 		        if timerQ.input_wrote then (
 		          Mutex.lock timerQ.mutex;
 		          let s = String.create 1 in
