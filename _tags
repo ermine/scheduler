@@ -1,3 +1,10 @@
-<scheduler.ml{i,}>: thread
-<tests/test.ml>: thread
-<tests/test.{byte,native}>: thread, use_unix, use_thread, use_scheduler
+# OASIS_START
+# DO NOT EDIT (digest: 24bb27f84bb80214df38b46ed214eca8)
+# Library scheduler
+<*.ml{,i}>: pkg_threads
+# Executable test
+<tests/test.{native,byte}>: use_scheduler
+<tests/test.{native,byte}>: pkg_threads
+<tests/*.ml{,i}>: use_scheduler
+<tests/*.ml{,i}>: pkg_threads
+# OASIS_STOP

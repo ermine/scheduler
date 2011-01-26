@@ -1,0 +1,27 @@
+OASISFormat: 0.2
+Name:        scheduler
+Version:     0.1
+Synopsis:    Small scheduler/timer for running function at given time
+Authors:     Anastasia Gornostaeva
+License:     BSD3
+LicenseFile: LICENCE
+Plugins:     DevFiles (0.2), META (0.2), StdFiles (0.2)
+BuildTools: ocamlbuild
+
+Library scheduler
+  Path:       .
+  Modules:    Heapqueue, Scheduler
+  BuildDepends: threads
+
+Executable test
+  Path: tests/
+  Install: false
+  CompiledObject: best
+  MainIs: test.ml
+  BuildDepends: scheduler
+
+SourceRepository github
+  Type:     git
+  Location: git://github.com/ermine/scheduler.git
+  Browser:  https://github.com/ermine/scheduler
+  
