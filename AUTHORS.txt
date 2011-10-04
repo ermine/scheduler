@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 15c01848bab2399964c9f72f6ba2bb50) *)
-Authors of scheduler
+(* DO NOT EDIT (digest: e1371d21c6760c9ff109000ce515a6a9) *)
+Authors of erm_scheduler
 Anastasia Gornostaeva
 (* OASIS_STOP *)

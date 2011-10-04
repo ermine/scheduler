@@ -1,6 +1,6 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: eadfd387b216c9ebf0b1639bdac56602) *)
-This is the INSTALL file for the scheduler distribution.
+(* DO NOT EDIT (digest: 951026e0a6426916ff2199a422ce4554) *)
+This is the INSTALL file for the erm_scheduler distribution.
 
 This package uses OASIS to generate its build system. See section OASIS for
 full information. 

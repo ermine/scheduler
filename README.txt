@@ -1,6 +1,6 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 85107321eba626f03d20425284151d67) *)
-This is the README file for the scheduler distribution.
+(* DO NOT EDIT (digest: 1ac7bce25fe2949cfe4d4761a993a072) *)
+This is the README file for the erm_scheduler distribution.
 
 Small scheduler/timer for running function at given time
 

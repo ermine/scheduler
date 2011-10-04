@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: de4372c82c947ca42a7f44c4c9bc6d3c) *)
+(* DO NOT EDIT (digest: 5efd7923465ff3939e0e11b3f561503b) *)
 module OASISGettext = struct
 # 21 "/usr/home/ermine/projects/ocaml/src/oasis/src/oasis/OASISGettext.ml"
   
@@ -450,8 +450,11 @@ end
 
 open Ocamlbuild_plugin;;
 let package_default =
-  {MyOCamlbuildBase.lib_ocaml = [("scheduler", [])]; lib_c = []; flags = []; 
-  }
+  {
+     MyOCamlbuildBase.lib_ocaml = [("erm_scheduler", [])];
+     lib_c = [];
+     flags = [];
+     }
   ;;
 
 let dispatch_default = MyOCamlbuildBase.dispatch_default package_default;;

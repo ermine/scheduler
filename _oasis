@@ -1,5 +1,5 @@
 OASISFormat: 0.2
-Name:        scheduler
+Name:        erm_scheduler
 Version:     0.1
 Synopsis:    Small scheduler/timer for running function at given time
 Authors:     Anastasia Gornostaeva
@@ -8,7 +8,7 @@ LicenseFile: LICENCE
 Plugins:     DevFiles (0.2), META (0.2), StdFiles (0.2)
 BuildTools: ocamlbuild
 
-Library scheduler
+Library erm_scheduler
   Path:       .
   Modules:    Heapqueue, Scheduler
   BuildDepends: threads
@@ -18,7 +18,7 @@ Executable test
   Install: false
   CompiledObject: best
   MainIs: test.ml
-  BuildDepends: scheduler
+  BuildDepends: erm_scheduler
 
 SourceRepository github
   Type:     git

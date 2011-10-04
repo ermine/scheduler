@@ -1,10 +1,10 @@
 # OASIS_START
-# DO NOT EDIT (digest: 8f53a1aa22d889302041fbe6e0b8a4c3)
+# DO NOT EDIT (digest: e979711c203e5b1f2693e3e4b20c4d06)
 version = "0.1"
 description = "Small scheduler/timer for running function at given time"
 requires = "threads"
-archive(byte) = "scheduler.cma"
-archive(native) = "scheduler.cmxa"
-exists_if = "scheduler.cma"
+archive(byte) = "erm_scheduler.cma"
+archive(native) = "erm_scheduler.cmxa"
+exists_if = "erm_scheduler.cma"
 # OASIS_STOP
 
