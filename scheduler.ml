@@ -1,5 +1,5 @@
 (*
- * (c) 2005-2009 Anastasia Gornostaeva. <ermine@ermine.pp.ru>
+ * (c) 2005-2009 Anastasia Gornostaeva
  *)
 
 open Heapqueue

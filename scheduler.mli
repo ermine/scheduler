@@ -1,5 +1,5 @@
 (*
- * (c) 2005-2008 Anastasia Gornostaeva. <ermine@ermine.pp.ru>
+ * (c) 2005-2008 Anastasia Gornostaeva
  *)
 
 type elt = {
