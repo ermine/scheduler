@@ -1,6 +1,20 @@
 # OASIS_START
-# DO NOT EDIT (digest: 11f5ca3b1839ce3f75c594a66853e315)
+# DO NOT EDIT (digest: 35e64e92f93f8e2d6183bc1502de9093)
+# Ignore VCS directories, you can use the same kind of rule outside 
+# OASIS_START/STOP if you want to exclude directories that contains 
+# useless stuff for the build process
+<**/.svn>: -traverse
+<**/.svn>: not_hygienic
+".bzr": -traverse
+".bzr": not_hygienic
+".hg": -traverse
+".hg": not_hygienic
+".git": -traverse
+".git": not_hygienic
+"_darcs": -traverse
+"_darcs": not_hygienic
 # Library erm_scheduler
+"erm_scheduler.cmxs": use_erm_scheduler
 <*.ml{,i}>: pkg_threads
 # Executable test
 <tests/test.{native,byte}>: use_erm_scheduler
